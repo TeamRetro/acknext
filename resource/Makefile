@@ -3,7 +3,6 @@ RESOURCES=$(shell rcc --list builtin.qrc)
 
 all: shaders resource.o
 
-	
 depends:
 	echo $(addprefix /home/felix/projects/acknext/resource/,$(RESOURCES))
 

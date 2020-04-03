@@ -2,18 +2,12 @@
 
 ## 2020 Acknext Reboot
 - New resource compiler based on Zig
-- Remove SDL_image dependency
-- Remove Assimp dependency
 - Remove SDL_mixer dependency?
   - Search for replacement library
-- Add ODE code to 
 - Port to `zig build` and provide cross tools for `acknext`
-  - Port `acknext` core library
   - Port `ackrc` + `librc`
   - Port `mtlconv`
-  - Port `zlib`
-  - Port `gl3w`
-  - Port `physfs`
+  - Port `ODE`
 - Identify problems for windows build
   - `getcwd` in `init.cpp`
 

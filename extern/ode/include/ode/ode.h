@@ -46,11 +46,13 @@
 #include <ode/threading_impl.h>
 #include <ode/cooperative.h>
 #include <ode/export-dif.h>
-#include <ode/version.h>
+
+// HACK: This is hardcoded now
+#define dODE_VERSION "0.16.0"
 
 #ifdef __cplusplus
-# include <ode/odecpp.h>
-# include <ode/odecpp_collision.h>
+#include <ode/odecpp.h>
+#include <ode/odecpp_collision.h>
 #endif
 
 #endif

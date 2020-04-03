@@ -34,19 +34,23 @@ A game engine prototype loosely inspired by the Acknex A8 engine.
 
 ## Building (Linux)
 
-1. Clone the repo
-2. Get current master for [Zig](https://ziglang.org/download/) and make it available in your `PATH`
-3. Prepare the environment: `source setup-env`
-4. Build ODE
-    1. Go to `extern/ode/`
-    2. Run `./bootstrap`
-    3. Run `./configure --disable-demos  --enable-static  --enable-libccd  --with-drawstuff=none  --with-libccd=internal`
-    4. Run `make`
-7. Build the engine
-    1. Go to root directory
-    2. `zig build`
-8. Test it
-    1. Run `./zig-cache/bin/rotating-cube`
+These instructions are only for building the core of the engine. Building
+the tools requires a complex setup yet to be simplified.
+
+### Dependencies
+
+- Latest master [Zig](https://ziglang.org/download/) in `$PATH`
+- [glslangValidator](https://github.com/KhronosGroup/glslang), available in most package managers
+- gnu make
+- gnu binutils
+- 7-zip command line util (`7z`)
+- qt5-base for `rcc`
+
+### Build Steps
+
+1. Prepare the resource environment (`make -C resource`)
+2. Build the engine (`zig build`)
+3. Test it (`./zig-cache/bin/rotating-cube`)
 
 ## Licence
 
