@@ -10,24 +10,24 @@
 
 #include <ode/collision.h>
 
-#define LOD0		(1<<0)
-#define LOD1		(1<<1)
-#define LOD2		(1<<2)
-#define LOD3		(1<<3)
-#define LOD4		(1<<4)
-#define LOD5		(1<<5)
-#define LOD6		(1<<6)
-#define LOD7		(1<<7)
-#define LOD8		(1<<8)
-#define LOD9		(1<<9)
-#define LOD10		(1<<10)
-#define LOD11		(1<<11)
-#define LOD12		(1<<12)
-#define LOD13		(1<<13)
-#define LOD14		(1<<14)
-#define LOD15		(1<<15)
-#define DOUBLESIDED (1<<16)
-#define ANIMATED    (1<<17)
+#define LOD0 (1 << 0)
+#define LOD1 (1 << 1)
+#define LOD2 (1 << 2)
+#define LOD3 (1 << 3)
+#define LOD4 (1 << 4)
+#define LOD5 (1 << 5)
+#define LOD6 (1 << 6)
+#define LOD7 (1 << 7)
+#define LOD8 (1 << 8)
+#define LOD9 (1 << 9)
+#define LOD10 (1 << 10)
+#define LOD11 (1 << 11)
+#define LOD12 (1 << 12)
+#define LOD13 (1 << 13)
+#define LOD14 (1 << 14)
+#define LOD15 (1 << 15)
+#define DOUBLESIDED (1 << 16)
+#define ANIMATED (1 << 17)
 
 // Plain type, has no backend
 typedef struct
@@ -53,11 +53,11 @@ typedef struct
 
 typedef struct
 {
-	SHADER * shader;
-	BITMAP * albedoTexture;
-	BITMAP * attributeTexture; // r=roughness, g=metallic, b=fresnell, a=ambient occlusion
-	BITMAP * emissionTexture;
-	BITMAP * normalTexture; // r,g,b∊[-1;1]
+	SHADER *shader;
+	BITMAP *albedoTexture;
+	BITMAP *attributeTexture; // r=roughness, g=metallic, b=fresnell, a=ambient occlusion
+	BITMAP *emissionTexture;
+	BITMAP *normalTexture; // r,g,b∊[-1;1]
 	COLOR albedo;
 	COLOR emission;
 	var roughness;
@@ -68,8 +68,8 @@ typedef struct
 typedef struct
 {
 	GLenum ACKCONST primitiveType;
-	BUFFER * vertexBuffer;
-	BUFFER * indexBuffer;
+	BUFFER *vertexBuffer;
+	BUFFER *indexBuffer;
 	AABB boundingBox;
 	uint32_t lodMask; // lower 16 bits: lod stage, upper 16 bits: render flags!
 } MESH;
@@ -88,7 +88,7 @@ typedef struct
 {
 	int targetBone; // The bone that will be animated
 	int frameCount;
-	FRAME * ACKCONST frames;
+	FRAME *ACKCONST frames;
 } CHANNEL;
 
 // managed type
@@ -97,7 +97,7 @@ typedef struct
 	char name[256];
 	var duration;
 	int channelCount;
-	CHANNEL * * ACKCONST channels;
+	CHANNEL **ACKCONST channels;
 	ANIMFLAGS flags;
 } ANIMATION;
 
@@ -110,10 +110,10 @@ typedef struct MODEL
 	int ACKCONST boneCount;
 
 	// Materials are 1:1 mapped to meshes!
-	MESH      * /*ACKCONST*/ * ACKCONST meshes;     // assigned by model_create or model_reshape
-	MATERIAL  * /*ACKCONST*/ * ACKCONST materials;  // assigned by model_create or model_reshape
-	ANIMATION * /*ACKCONST*/ * ACKCONST animations; // assigned by model_create or model_reshape
-	BONE bones[ACKNEXT_MAX_BONES];    // 0 is root/default bone
+	MESH * /*ACKCONST*/ *ACKCONST meshes;					 // assigned by model_create or model_reshape
+	MATERIAL * /*ACKCONST*/ *ACKCONST materials;	 // assigned by model_create or model_reshape
+	ANIMATION * /*ACKCONST*/ *ACKCONST animations; // assigned by model_create or model_reshape
+	BONE bones[ACKNEXT_MAX_BONES];								 // 0 is root/default bone
 
 	AABB ACKCONST boundingBox;
 	uint minimumLOD; // (if(lod > minimumLOD) discard; // Usually 16, so always visible
@@ -121,7 +121,7 @@ typedef struct MODEL
 	// Collider Creation Callback
 	// if none, no collider will be created
 	// Can be customized to allow self-built colliders for models
-	dGeomID (*createCollider)(dSpaceID space, struct MODEL * model);
+	dGeomID (*createCollider)(dSpaceID space, struct MODEL *model);
 } MODEL;
 
 // managed type
@@ -135,7 +135,6 @@ typedef struct
 	MATRIX projection;
 	CAMERATYPE type;
 } CAMERA;
-
 
 typedef enum LIGHTTYPE
 {
@@ -163,82 +162,83 @@ typedef struct
 typedef uint32_t INDEX;
 
 // model api:
-ACKFUN MODEL * model_load(char const * fileName);
+ACKFUN MODEL *model_load(char const *fileName);
 
-ACKFUN MODEL * model_get(char const * fileName); // uses caching
+ACKFUN MODEL *model_get(char const *fileName); // uses caching
 
-ACKFUN void model_write(ACKFILE * file, MODEL const * model);
+ACKFUN void model_write(ACKFILE *file, MODEL const *model);
 
-ACKFUN MODEL * model_read(ACKFILE * file);
+ACKFUN MODEL *model_read(ACKFILE *file);
 
-ACKFUN void model_remove(MODEL * model); // only created or loaded ones
+ACKFUN void model_remove(MODEL *model); // only created or loaded ones
 
-ACKFUN MODEL * model_create(int numMeshes, int numBones, int numAnimations);
+ACKFUN MODEL *model_create(int numMeshes, int numBones, int numAnimations);
 
-ACKFUN void model_reshape(MODEL * model, int meshC, int boneC, int animC);
+ACKFUN void model_reshape(MODEL *model, int meshC, int boneC, int animC);
 
-ACKFUN void model_updateBoundingBox(MODEL * model, bool updateMeshes);
+ACKFUN void model_updateBoundingBox(MODEL *model, bool updateMeshes);
 
 // animation api:
 
-ACKFUN CHANNEL * chan_create(int frames);
+ACKFUN CHANNEL *chan_create(int frames);
 
-ACKFUN void chan_remove(CHANNEL * chan);
+ACKFUN void chan_remove(CHANNEL *chan);
 
-ACKFUN ANIMATION * anim_create(char const * name, int channels);
+ACKFUN ANIMATION *anim_create(char const *name, int channels);
 
-ACKFUN void anim_remove(ANIMATION * anim);
+ACKFUN void anim_remove(ANIMATION *anim);
 
 // render api:
 ACKVAR var lod_distances[16]; // The distances for each of the 16 LOD stages. Should be strictly monotonically increasing
 
-ACKVAR CAMERA * ACKCONST camera;
+ACKVAR CAMERA *ACKCONST camera;
 
 ACKVAR COLOR sky_color;
 
-ACKFUN CAMERA * camera_create();
+ACKFUN CAMERA *camera_create();
 
-ACKFUN void camera_remove(CAMERA * camera);
+ACKFUN void camera_remove(CAMERA *camera);
 
 ACKFUN void camera_to_matrix(
-    CAMERA const * view,
-    MATRIX * matView,
-    MATRIX * matProjection,
-	VIEW const * reference);
+		CAMERA const *view,
+		MATRIX *matView,
+		MATRIX *matProjection,
+		VIEW const *reference);
 
 // mesh api:
-ACKFUN MESH * mesh_create(GLenum primitiveType, BUFFER * vertexBuffer, BUFFER * indexBuffer);
+ACKFUN MESH *mesh_create(GLenum primitiveType, BUFFER *vertexBuffer, BUFFER *indexBuffer);
 
-ACKFUN MESH * mesh_read(ACKFILE * file);
+ACKFUN MESH *mesh_read(ACKFILE *file);
 
-ACKFUN void mesh_write(ACKFILE * file, MESH const * mesh);
+ACKFUN void mesh_write(ACKFILE *file, MESH const *mesh);
 
-ACKFUN void mesh_remove(MESH * mesh);
+ACKFUN void mesh_remove(MESH *mesh);
 
-ACKFUN void mesh_updateBoundingBox(MESH * mesh);
+ACKFUN void mesh_updateBoundingBox(MESH *mesh);
 
 // material api:
 
-ACKFUN MATERIAL * mtl_create();
+ACKFUN MATERIAL *mtl_create();
 
-ACKFUN MATERIAL * mtl_read(ACKFILE * file);
+ACKFUN MATERIAL *mtl_read(ACKFILE *file);
 
-ACKFUN void mtl_write(ACKFILE * file, MATERIAL const * mtl);
+ACKFUN void mtl_write(ACKFILE *file, MATERIAL const *mtl);
 
-ACKFUN void mtl_remove(MATERIAL * mtl);
+ACKFUN void mtl_remove(MATERIAL *mtl);
 
 // light api:
-ACKFUN LIGHT * light_create(LIGHTTYPE type);
+ACKFUN LIGHT *light_create(LIGHTTYPE type);
 
-ACKFUN void light_remove(LIGHT * light);
+ACKFUN void light_remove(LIGHT *light);
 
-ACKFUN LIGHT * light_next(LIGHT const * light);
+ACKFUN LIGHT *light_next(LIGHT const *light);
 
 // render api:
 
-ACKVAR var pp_exposure; // = 1.0;
+ACKVAR var pp_exposure;		 // = 1.0;
 ACKVAR PPSTAGES pp_stages; // = PP_BLOOM | PP_SSAO | PP_REINHARD;
 
-ACKFUN void render_scene_with_camera(CAMERA * camera);
+// ACKFUN void render_scene_with_camera(CAMERA *camera);
+ACKFUN void render_scene_with_camera(void *camera);
 
 #endif // _ACKNEXT_SCENE_H_

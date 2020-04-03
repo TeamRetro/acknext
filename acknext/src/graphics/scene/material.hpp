@@ -1,7 +1,7 @@
 #ifndef MATERIAL_HPP
 #define MATERIAL_HPP
 
-#include <engine.hpp>
+#include "engine.hpp"
 
 class Material :
 	public EngineObject<MATERIAL>

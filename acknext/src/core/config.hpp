@@ -1,6 +1,6 @@
 #ifndef CONFIG_HPP
 #define CONFIG_HPP
 
-#include <engine.hpp>
+#include "engine.hpp"
 
 #endif // CONFIG_HPP

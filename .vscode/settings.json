@@ -1,0 +1,7 @@
+{
+  "files.associations": {
+    "stb_image.h": "c",
+    "acknext.h": "c",
+    "scene.h": "c"
+  }
+}

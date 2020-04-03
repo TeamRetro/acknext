@@ -1,7 +1,7 @@
 #ifndef BITMAP_HPP
 #define BITMAP_HPP
 
-#include <engine.hpp>
+#include "engine.hpp"
 
 class Bitmap : public EngineObject<BITMAP>
 {

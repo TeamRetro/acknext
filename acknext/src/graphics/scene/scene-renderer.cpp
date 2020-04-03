@@ -1,4 +1,4 @@
-#include <engine.hpp>
+#include "engine.hpp"
 
 #include "mesh.hpp"
 #include "model.hpp"
@@ -16,11 +16,12 @@
 
 #define LIGHT_LIMIT 16
 
-extern Shader * defaultShader;
+extern Shader *defaultShader;
 
-Shader * FB(Shader * sh)
+Shader *FB(Shader *sh)
 {
-	if(sh) return sh;
+	if (sh)
+		return sh;
 	return defaultShader;
 }
 
@@ -34,24 +35,24 @@ struct LIGHTDATA
 	__attribute__((aligned(16))) COLOR color;
 };
 
-static BUFFER * ubo = nullptr;
-static BUFFER * bonesBuf = nullptr;
-static BUFFER * instaBuf = nullptr;
+static BUFFER *ubo = nullptr;
+static BUFFER *bonesBuf = nullptr;
+static BUFFER *instaBuf = nullptr;
 
-extern Shader * currentShader;
+extern Shader *currentShader;
 
 static void setupLights()
 {
 	GLint block_index = glGetUniformBlockIndex(
-		currentShader->api().object,
-		"LightBlock");
-	if(block_index >= 0) // only when lights are required
+			currentShader->api().object,
+			"LightBlock");
+	if (block_index >= 0) // only when lights are required
 	{
 		int lcount = 0;
-		LIGHTDATA * lights = (LIGHTDATA*)glMapNamedBuffer(
-					ubo->object,
-					GL_WRITE_ONLY);
-		for(LIGHT * l = light_next(nullptr); l != nullptr; l = light_next(l))
+		LIGHTDATA *lights = (LIGHTDATA *)glMapNamedBuffer(
+				ubo->object,
+				GL_WRITE_ONLY);
+		for (LIGHT *l = light_next(nullptr); l != nullptr; l = light_next(l))
 		{
 			lights[lcount].type = l->type;
 			lights[lcount].intensity = l->intensity;
@@ -62,7 +63,8 @@ static void setupLights()
 
 			vec_normalize(&lights[lcount].direction, 1.0);
 			lcount += 1;
-			if(lcount >= LIGHT_LIMIT) {
+			if (lcount >= LIGHT_LIMIT)
+			{
 				break;
 			}
 		}
@@ -70,15 +72,17 @@ static void setupLights()
 
 		GLuint binding_point_index = 2;
 		glBindBufferBase(
-			GL_UNIFORM_BUFFER,
-			binding_point_index,
-			ubo->object);
+				GL_UNIFORM_BUFFER,
+				binding_point_index,
+				ubo->object);
 		glUniformBlockBinding(
-			currentShader->api().object,
-			block_index,
-			binding_point_index);
+				currentShader->api().object,
+				block_index,
+				binding_point_index);
 		currentShader->iLightCount = lcount;
-	} else {
+	}
+	else
+	{
 		currentShader->iLightCount = 0;
 	}
 }
@@ -86,28 +90,28 @@ static void setupLights()
 static void setupBones()
 {
 	GLint block_index = glGetUniformBlockIndex(
-		currentShader->api().object,
-		"BoneBlock");
-	if(block_index >= 0)
+			currentShader->api().object,
+			"BoneBlock");
+	if (block_index >= 0)
 	{
 		GLuint binding_point_index = 4;
 		glBindBufferBase(
-			GL_UNIFORM_BUFFER,
-			binding_point_index,
-			bonesBuf->object);
+				GL_UNIFORM_BUFFER,
+				binding_point_index,
+				bonesBuf->object);
 		glUniformBlockBinding(
-			currentShader->api().object,
-			block_index,
-			binding_point_index);
+				currentShader->api().object,
+				block_index,
+				binding_point_index);
 	}
 }
 
 struct Drawcall
 {
-	ENTITY const * ent = nullptr;
-	MODEL const * model = nullptr;
-	MESH const * mesh = nullptr;
-	MATERIAL const * material = nullptr;
+	ENTITY const *ent = nullptr;
+	MODEL const *model = nullptr;
+	MESH const *mesh = nullptr;
+	MATERIAL const *material = nullptr;
 	MATRIX matWorld;
 	bool renderDoubleSided;
 
@@ -116,7 +120,7 @@ struct Drawcall
 	Drawcall(Drawcall &&) = default;
 	~Drawcall() = default;
 
-	Drawcall & operator =(Drawcall const &) = default;
+	Drawcall &operator=(Drawcall const &) = default;
 
 	void exec()
 	{
@@ -133,11 +137,10 @@ enum class HalfSpace
 
 struct Plane
 {
-	Plane() : xyz(0,0,0), w(0) { }
+	Plane() : xyz(0, 0, 0), w(0) {}
 
-	Plane(float x, float y, float z, float w) :
-	    xyz(x, y, z),
-	    w(w)
+	Plane(float x, float y, float z, float w) : xyz(x, y, z),
+																							w(w)
 	{
 		this->normalize();
 	}
@@ -149,20 +152,20 @@ struct Plane
 	{
 		float mag = glm::length(xyz);
 		this->xyz /= mag;
-		this->w   /= mag;
+		this->w /= mag;
 	}
 
-	float distance(glm::vec3 const & pt) const
+	float distance(glm::vec3 const &pt) const
 	{
 		return this->xyz.x * pt.x + this->xyz.y * pt.y + this->xyz.z * pt.z + this->w;
 	}
 
-	float distance(VECTOR const & pt) const
+	float distance(VECTOR const &pt) const
 	{
 		return this->xyz.x * pt.x + this->xyz.y * pt.y + this->xyz.z * pt.z + this->w;
 	}
 
-	HalfSpace classify(glm::vec3 const & pt) const
+	HalfSpace classify(glm::vec3 const &pt) const
 	{
 		float d = this->distance(pt);
 		if (d < 0)
@@ -177,7 +180,7 @@ struct Frustrum
 {
 	Plane planes[6];
 
-	Frustrum(MATRIX const & modelView)
+	Frustrum(MATRIX const &modelView)
 	{
 		float m11 = modelView.fields[0][0];
 		float m12 = modelView.fields[1][0];
@@ -199,28 +202,28 @@ struct Frustrum
 		float m43 = modelView.fields[2][3];
 		float m44 = modelView.fields[3][3];
 
-		/*left*/   planes[0] = Plane(m41 + m11, m42 + m12, m43 + m13, m44 + m14);
-		/*right*/  planes[1] = Plane(m41 - m11, m42 - m12, m43 - m13, m44 - m14);
+		/*left*/ planes[0] = Plane(m41 + m11, m42 + m12, m43 + m13, m44 + m14);
+		/*right*/ planes[1] = Plane(m41 - m11, m42 - m12, m43 - m13, m44 - m14);
 		/*bottom*/ planes[2] = Plane(m41 + m21, m42 + m22, m43 + m23, m44 + m24);
-		/*top*/    planes[3] = Plane(m41 - m21, m42 - m22, m43 - m23, m44 - m24);
-		/*near*/   planes[4] = Plane(m41 + m31, m42 + m32, m43 + m33, m44 + m34);
-		/*far*/    planes[5] = Plane(m41 - m31, m42 - m32, m43 - m33, m44 - m34);
+		/*top*/ planes[3] = Plane(m41 - m21, m42 - m22, m43 - m23, m44 - m24);
+		/*near*/ planes[4] = Plane(m41 + m31, m42 + m32, m43 + m33, m44 + m34);
+		/*far*/ planes[5] = Plane(m41 - m31, m42 - m32, m43 - m33, m44 - m34);
 
-		for(int i = 0; i < 6; i++)
+		for (int i = 0; i < 6; i++)
 			planes[i].normalize();
 	}
 };
 
-static bool cull(Frustrum const & frustrum, VECTOR const & position, float radius)
+static bool cull(Frustrum const &frustrum, VECTOR const &position, float radius)
 {
 	using namespace glm;
 
 	var threshold = -radius;
 
-	for(int i = 0; i < 6; i++)
+	for (int i = 0; i < 6; i++)
 	{
 		float dist = frustrum.planes[i].distance(position);
-		if(dist < threshold)
+		if (dist < threshold)
 			return true;
 	}
 	return false;
@@ -228,31 +231,28 @@ static bool cull(Frustrum const & frustrum, VECTOR const & position, float radiu
 
 struct Drawgroup
 {
-	MATERIAL const * mtl = nullptr;
-	MESH const * mesh = nullptr;
-	MODEL const * model = nullptr;
+	MATERIAL const *mtl = nullptr;
+	MESH const *mesh = nullptr;
+	MODEL const *model = nullptr;
 	bool doublesided = false;
 };
 
-static bool operator ==(Drawgroup const & lhs, Drawgroup const & rhs)
+static bool operator==(Drawgroup const &lhs, Drawgroup const &rhs)
 {
-	return lhs.mtl == rhs.mtl
-		&& lhs.model == rhs.model
-		&& lhs.mesh == rhs.mesh
-		&& lhs.doublesided == rhs.doublesided;
+	return lhs.mtl == rhs.mtl && lhs.model == rhs.model && lhs.mesh == rhs.mesh && lhs.doublesided == rhs.doublesided;
 }
 
 class DrawgroupHash
 {
 public:
-    size_t operator()(const Drawgroup &group) const
-    {
-        size_t h1 = reinterpret_cast<size_t>(group.mtl);
+	size_t operator()(const Drawgroup &group) const
+	{
+		size_t h1 = reinterpret_cast<size_t>(group.mtl);
 		size_t h2 = reinterpret_cast<size_t>(group.model);
-        size_t h3 = reinterpret_cast<size_t>(group.mesh);
+		size_t h3 = reinterpret_cast<size_t>(group.mesh);
 		size_t h4 = std::hash<bool>()(group.doublesided);
-        return h1 ^ (h2 << 1) ^ (h3 << 2) ^ (h4 << 3);
-    }
+		return h1 ^ (h2 << 1) ^ (h3 << 2) ^ (h4 << 3);
+	}
 };
 
 struct Instance
@@ -261,16 +261,16 @@ struct Instance
 	// STRUCT, OTHERWISE THE VERTEX ARRAY LAYOUT
 	// WILL MESS UP!
 	MATRIX transform;
-	ENTITY const * ent = nullptr;
+	ENTITY const *ent = nullptr;
 } __attribute__((packed));
 
 extern GLuint vao;
 
-static void render_scene(CAMERA * perspective, MATERIAL * mtlOverride);
+static void render_scene(CAMERA *perspective, MATERIAL *mtlOverride);
 
-static SHADER * create_ppshader(char const * pixelop)
+static SHADER *create_ppshader(char const *pixelop)
 {
-	SHADER * ppshader = shader_create();
+	SHADER *ppshader = shader_create();
 
 	shader_addFileSource(ppshader, VERTEXSHADER, "/builtin/shaders/postprocess.vert");
 	shader_addFileSource(ppshader, FRAGMENTSHADER, "/builtin/shaders/gamma.glsl");
@@ -283,50 +283,50 @@ static SHADER * create_ppshader(char const * pixelop)
 
 ACKNEXT_API_BLOCK
 {
-	CAMERA * camera;
+	CAMERA *camera;
 
-	COLOR sky_color = { 0.3, 0.7, 1.0, 1.0 };
+	COLOR sky_color = {0.3, 0.7, 1.0, 1.0};
 
 	var pp_exposure = 1.0;
 	PPSTAGES pp_stages = PP_BLOOM | PP_SSAO | PP_REINHARD;
 
 	var lod_distances[16] =
-	{
-		0.5,
-	    1.0,
-	    5.0,
-	    10.0,
-	    15.0,
-	    25.0,
-	    50.0,
-	    75.0,
-	    100.0,
-	    250.0,
-	    500.0,
-	    1000.0,
-	    2500.0,
-	    4000.0,
-	    10000.0,
-		20000.0,
-	};
+			{
+					0.5,
+					1.0,
+					5.0,
+					10.0,
+					15.0,
+					25.0,
+					50.0,
+					75.0,
+					100.0,
+					250.0,
+					500.0,
+					1000.0,
+					2500.0,
+					4000.0,
+					10000.0,
+					20000.0,
+			};
 
-	void render_scene_with_camera(CAMERA * perspective)
+	void render_scene_with_camera(void *camera)
 	{
+		CAMERA *perspective = reinterpret_cast<CAMERA *>(camera);
 		GLint drawFboId = 0;
 		glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &drawFboId);
 
-		if(drawFboId != 0)
+		if (drawFboId != 0)
 			engine_log("Current FB: %d", drawFboId);
 
-
-		static FRAMEBUFFER * stageScene = nullptr;
-		static FRAMEBUFFER * stageSSAOApply = nullptr;
-		static FRAMEBUFFER * stageSSAOBlur = nullptr;
-		static FRAMEBUFFER * stageSSAOCombine = nullptr;
-		static FRAMEBUFFER * stageBloom0 = nullptr;
-		static FRAMEBUFFER * stageBloom1 = nullptr;
-		static FRAMEBUFFER * stageBloomCombine = nullptr;
-		static FRAMEBUFFER * stageHDR = nullptr;
+		static FRAMEBUFFER *stageScene = nullptr;
+		static FRAMEBUFFER *stageSSAOApply = nullptr;
+		static FRAMEBUFFER *stageSSAOBlur = nullptr;
+		static FRAMEBUFFER *stageSSAOCombine = nullptr;
+		static FRAMEBUFFER *stageBloom0 = nullptr;
+		static FRAMEBUFFER *stageBloom1 = nullptr;
+		static FRAMEBUFFER *stageBloomCombine = nullptr;
+		static FRAMEBUFFER *stageHDR = nullptr;
 
 		SIZE targetSize;
 		view_to_bounds(view_current, nullptr, &targetSize);
@@ -338,75 +338,82 @@ ACKNEXT_API_BLOCK
 		MATRIX matView, matProj;
 		camera_to_matrix(perspective, &matView, &matProj, view_current);
 
-		if(stageScene == nullptr)
+		if (stageScene == nullptr)
 		{
 			stageScene = framebuf_create();
 			stageScene->targets[0] = bmap_create(GL_TEXTURE_2D, GL_RGBA32F); // color
 			stageScene->targets[1] = bmap_create(GL_TEXTURE_2D, GL_RGBA32F); // position
-			stageScene->targets[2] = bmap_create(GL_TEXTURE_2D, GL_RGBA8);   // normal
-			stageScene->targets[3] = bmap_create(GL_TEXTURE_2D, GL_RGBA8);   // attributes (roughness, metallic, ???)
+			stageScene->targets[2] = bmap_create(GL_TEXTURE_2D, GL_RGBA8);	 // normal
+			stageScene->targets[3] = bmap_create(GL_TEXTURE_2D, GL_RGBA8);	 // attributes (roughness, metallic, ???)
 			stageScene->depthBuffer = bmap_create(GL_TEXTURE_2D, GL_DEPTH24_STENCIL8);
 		}
 
-		if(stageSSAOApply == nullptr)
+		if (stageSSAOApply == nullptr)
 		{
 			stageSSAOApply = framebuf_create();
 			stageSSAOApply->targets[0] = bmap_create(GL_TEXTURE_2D, GL_R8);
 		}
 
-		if(stageSSAOBlur == nullptr)
+		if (stageSSAOBlur == nullptr)
 		{
 			stageSSAOBlur = framebuf_create();
 			stageSSAOBlur->targets[0] = bmap_create(GL_TEXTURE_2D, GL_R8);
 		}
 
-		if(stageSSAOCombine == nullptr)
+		if (stageSSAOCombine == nullptr)
 		{
 			stageSSAOCombine = framebuf_create();
 			stageSSAOCombine->targets[0] = bmap_create(GL_TEXTURE_2D, GL_RGB16F);
 		}
 
-		if(stageBloom0 == nullptr)
+		if (stageBloom0 == nullptr)
 		{
 			stageBloom0 = framebuf_create();
 			stageBloom0->targets[0] = bmap_create(GL_TEXTURE_2D, GL_RGB16F);
 		}
 
-		if(stageBloom1 == nullptr)
+		if (stageBloom1 == nullptr)
 		{
 			stageBloom1 = framebuf_create();
 			stageBloom1->targets[0] = bmap_create(GL_TEXTURE_2D, GL_RGB16F);
 		}
 
-		if(stageBloomCombine == nullptr)
+		if (stageBloomCombine == nullptr)
 		{
 			stageBloomCombine = framebuf_create();
 			stageBloomCombine->targets[0] = bmap_create(GL_TEXTURE_2D, GL_RGB16F);
 			framebuf_resize(stageBloomCombine, targetSize);
 		}
 
-		if(stageHDR == nullptr)
+		if (stageHDR == nullptr)
 		{
 			stageHDR = framebuf_create();
 			stageHDR->targets[0] = bmap_create(GL_TEXTURE_2D, GL_RGB16F);
 			framebuf_resize(stageHDR, targetSize);
 		}
 
-		static SHADER * tonemapLinear = nullptr;
-		static SHADER * tonemapReinhard = nullptr;
-		static SHADER * bloomblur = nullptr;
-		static SHADER * bloomcomb = nullptr;
-		static SHADER * ssao = nullptr;
-		static SHADER * ssaoCombine = nullptr;
-		static SHADER * fxaa = nullptr;
+		static SHADER *tonemapLinear = nullptr;
+		static SHADER *tonemapReinhard = nullptr;
+		static SHADER *bloomblur = nullptr;
+		static SHADER *bloomcomb = nullptr;
+		static SHADER *ssao = nullptr;
+		static SHADER *ssaoCombine = nullptr;
+		static SHADER *fxaa = nullptr;
 
-		if(!tonemapLinear)   tonemapLinear   = create_ppshader("/builtin/shaders/pp/hdr/linear.frag");
-		if(!tonemapReinhard) tonemapReinhard = create_ppshader("/builtin/shaders/pp/hdr/reinhard.frag");
-		if(!bloomblur)       bloomblur       = create_ppshader("/builtin/shaders/pp/bloom/blur.frag");
-		if(!bloomcomb)       bloomcomb       = create_ppshader("/builtin/shaders/pp/bloom/combine.frag");
-		if(!ssao)            ssao            = create_ppshader("/builtin/shaders/pp/ssao/apply.frag");
-		if(!ssaoCombine)     ssaoCombine     = create_ppshader("/builtin/shaders/pp/ssao/combine.frag");
-		if(!fxaa)            fxaa            = create_ppshader("/builtin/shaders/pp/fxaa.frag");
+		if (!tonemapLinear)
+			tonemapLinear = create_ppshader("/builtin/shaders/pp/hdr/linear.frag");
+		if (!tonemapReinhard)
+			tonemapReinhard = create_ppshader("/builtin/shaders/pp/hdr/reinhard.frag");
+		if (!bloomblur)
+			bloomblur = create_ppshader("/builtin/shaders/pp/bloom/blur.frag");
+		if (!bloomcomb)
+			bloomcomb = create_ppshader("/builtin/shaders/pp/bloom/combine.frag");
+		if (!ssao)
+			ssao = create_ppshader("/builtin/shaders/pp/ssao/apply.frag");
+		if (!ssaoCombine)
+			ssaoCombine = create_ppshader("/builtin/shaders/pp/ssao/combine.frag");
+		if (!fxaa)
+			fxaa = create_ppshader("/builtin/shaders/pp/fxaa.frag");
 
 		{ // 1: render scnee
 			framebuf_resize(stageScene, targetSize);
@@ -420,9 +427,9 @@ ACKNEXT_API_BLOCK
 		glDisable(GL_DEPTH_TEST);
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-		BITMAP * currentOutput = stageScene->targets[0];
+		BITMAP *currentOutput = stageScene->targets[0];
 
-		if(pp_stages & PP_SSAO)
+		if (pp_stages & PP_SSAO)
 		{
 			{
 				framebuf_resize(stageSSAOApply, halfSize);
@@ -446,7 +453,7 @@ ACKNEXT_API_BLOCK
 				opengl_setShader(bloomblur);
 				currentShader->texInput = bmap_to_linear(stageSSAOApply->targets[0]);
 				currentShader->fCutoff = 0.0;
-				currentShader->vecBlurScale = (VECTOR2) { 0.5, 0.5 };
+				currentShader->vecBlurScale = (VECTOR2){0.5, 0.5};
 
 				opengl_drawFullscreenQuad();
 			}
@@ -456,7 +463,7 @@ ACKNEXT_API_BLOCK
 				opengl_setFrameBuffer(stageSSAOCombine);
 
 				opengl_setShader(ssaoCombine);
-				currentShader->texInput     = bmap_to_linear(stageScene->targets[0]);
+				currentShader->texInput = bmap_to_linear(stageScene->targets[0]);
 				currentShader->texOcclusion = bmap_to_linear(stageSSAOBlur->targets[0]);
 
 				opengl_drawFullscreenQuad();
@@ -465,7 +472,7 @@ ACKNEXT_API_BLOCK
 			currentOutput = stageSSAOCombine->targets[0];
 		}
 
-		if(pp_stages & PP_BLOOM)
+		if (pp_stages & PP_BLOOM)
 		{
 			{ // 2: render bloom image (half size)
 				framebuf_resize(stageBloom0, halfSize);
@@ -474,7 +481,7 @@ ACKNEXT_API_BLOCK
 				opengl_setShader(bloomblur);
 				currentShader->texInput = bmap_to_linear(currentOutput);
 				currentShader->fCutoff = 1.0;
-				currentShader->vecBlurScale = (VECTOR2) { 1.0, 0.5 };
+				currentShader->vecBlurScale = (VECTOR2){1.0, 0.5};
 
 				opengl_drawFullscreenQuad();
 			}
@@ -489,7 +496,7 @@ ACKNEXT_API_BLOCK
 				opengl_setShader(bloomblur);
 				currentShader->texInput = bmap_to_linear(stageBloom0->targets[0]);
 				currentShader->fCutoff = 0.0;
-				currentShader->vecBlurScale = (VECTOR2) { 1.0, 0.5 };
+				currentShader->vecBlurScale = (VECTOR2){1.0, 0.5};
 
 				opengl_drawFullscreenQuad();
 			}
@@ -511,9 +518,12 @@ ACKNEXT_API_BLOCK
 			framebuf_resize(stageHDR, targetSize);
 			opengl_setFrameBuffer(stageHDR);
 
-			if(pp_stages & PP_REINHARD) {
+			if (pp_stages & PP_REINHARD)
+			{
 				opengl_setShader(tonemapReinhard);
-			} else {
+			}
+			else
+			{
 				opengl_setShader(tonemapLinear);
 			}
 
@@ -525,7 +535,7 @@ ACKNEXT_API_BLOCK
 
 		{
 			opengl_setFrameBuffer(nullptr);
-			if(drawFboId != 0)
+			if (drawFboId != 0)
 				glBindFramebuffer(GL_DRAW_FRAMEBUFFER, drawFboId);
 
 			opengl_setShader(fxaa);
@@ -537,27 +547,28 @@ ACKNEXT_API_BLOCK
 	}
 }
 
-static void render_scene(CAMERA * perspective, MATERIAL * mtlOverride)
+static void render_scene(CAMERA *perspective, MATERIAL *mtlOverride)
 {
 	glBindVertexArray(vao);
 
-	if(perspective == nullptr) {
+	if (perspective == nullptr)
+	{
 		return;
 	}
 
-	if(!ubo)
+	if (!ubo)
 	{
 		ubo = buffer_create(UNIFORMBUFFER);
 		buffer_set(ubo, sizeof(LIGHTDATA) * LIGHT_LIMIT, nullptr);
 	}
 
-	if(!bonesBuf)
+	if (!bonesBuf)
 	{
 		bonesBuf = buffer_create(UNIFORMBUFFER);
 		buffer_set(bonesBuf, sizeof(MATRIX) * ACKNEXT_MAX_BONES, NULL);
 	}
 
-	if(!instaBuf)
+	if (!instaBuf)
 	{
 		instaBuf = buffer_create(VERTEXBUFFER);
 	}
@@ -565,10 +576,13 @@ static void render_scene(CAMERA * perspective, MATERIAL * mtlOverride)
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);
 
-	if(opengl_wireFrame) {
-		glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-	} else {
-		glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+	if (opengl_wireFrame)
+	{
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	}
+	else
+	{
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	}
 
 	glEnable(GL_DEPTH_TEST);
@@ -582,48 +596,47 @@ static void render_scene(CAMERA * perspective, MATERIAL * mtlOverride)
 
 	std::vector<Drawcall> drawcalls;
 
-
 	MATRIX matViewProj;
 	glm_to_ack(&matViewProj,
-		  ack_to_glm(matProj)
-		* ack_to_glm(matView));
+						 ack_to_glm(matProj) * ack_to_glm(matView));
 
 	Frustrum clipFrustrum(matViewProj);
 
-	for(ENTITY * ent = ent_next(nullptr); ent != nullptr; ent = ent_next(ent))
+	for (ENTITY *ent = ent_next(nullptr); ent != nullptr; ent = ent_next(ent))
 	{
 		// Entity * entity = promote<Entity>(ent);
-		if(ent->model == nullptr)
+		if (ent->model == nullptr)
 			continue;
-		if(!(ent->flags & VISIBLE))
+		if (!(ent->flags & VISIBLE))
 			continue;
 		// TODO: Filter entity by mask bits
 
 		MATRIX matWorld;
 		glm_to_ack(&matWorld,
-			glm::translate(glm::mat4(), ack_to_glm(ent->position)) *
-			glm::mat4_cast(ack_to_glm(ent->rotation)) *
-			glm::scale(glm::mat4(), ack_to_glm(ent->scale)));
+							 glm::translate(glm::identity<glm::mat4>(), ack_to_glm(ent->position)) *
+									 glm::mat4_cast(ack_to_glm(ent->rotation)) *
+									 glm::scale(glm::identity<glm::mat4>(), ack_to_glm(ent->scale)));
 
 		var dist = vec_dist(&camera->position, &ent->position);
 		uint lod;
-		for(lod = 15; lod_distances[lod] > dist && lod > 0; lod--);
+		for (lod = 15; lod_distances[lod] > dist && lod > 0; lod--)
+			;
 
-		if(lod > ent->model->minimumLOD)
+		if (lod > ent->model->minimumLOD)
 			continue;
 
-		Model * model = promote<Model>(ent->model);
-		for(int i = 0; i < model->api().meshCount; i++)
+		Model *model = promote<Model>(ent->model);
+		for (int i = 0; i < model->api().meshCount; i++)
 		{
 			Drawcall call;
 
-			if(mtlOverride != nullptr)
+			if (mtlOverride != nullptr)
 			{
 				call.material = mtlOverride;
 			}
 			else
 			{
-				if(ent->material == nullptr)
+				if (ent->material == nullptr)
 					call.material = model->api().materials[i];
 				else
 					call.material = ent->material;
@@ -645,11 +658,11 @@ static void render_scene(CAMERA * perspective, MATERIAL * mtlOverride)
 
 			// Only allow rendering of meshes when the
 			// LOD is enabled in the MESH
-			if(call.mesh->lodMask & (1<<lod))
+			if (call.mesh->lodMask & (1 << lod))
 			{
 				// And only render it, when the
 				// mesh is actually visible
-				if(!cull(clipFrustrum, call.ent->position, radius))
+				if (!cull(clipFrustrum, call.ent->position, radius))
 				{
 					drawcalls.push_back(call);
 				}
@@ -659,7 +672,7 @@ static void render_scene(CAMERA * perspective, MATERIAL * mtlOverride)
 
 	{
 		std::unordered_map<Drawgroup, std::vector<Instance>, DrawgroupHash> groups;
-		for(auto & call : drawcalls)
+		for (auto &call : drawcalls)
 		{
 			Drawgroup group;
 			group.mtl = call.material;
@@ -674,11 +687,11 @@ static void render_scene(CAMERA * perspective, MATERIAL * mtlOverride)
 			groups[group].push_back(instance);
 		}
 
-//			engine_log("start rendering");
-		for(auto & entry : groups)
+		//			engine_log("start rendering");
+		for (auto &entry : groups)
 		{
-			Drawgroup const & params = entry.first;
-			std::vector<Instance> const & instances = entry.second;
+			Drawgroup const &params = entry.first;
+			std::vector<Instance> const &instances = entry.second;
 
 			// Setup:
 			{
@@ -688,7 +701,7 @@ static void render_scene(CAMERA * perspective, MATERIAL * mtlOverride)
 				currentShader->matProj = matProj;
 
 				currentShader->vecViewPos = perspective->position;
-				static const COLOR fog = {152/255.0,179/255.0,166/255.0,0.0003};
+				static const COLOR fog = {152 / 255.0, 179 / 255.0, 166 / 255.0, 0.0003};
 				currentShader->vecFogColor = fog;
 				currentShader->fArc = tan(0.5 * DEG_TO_RAD * perspective->arc);
 
@@ -702,30 +715,29 @@ static void render_scene(CAMERA * perspective, MATERIAL * mtlOverride)
 			// Animated models have a slight problem:
 			// They can't be instanced!
 			bool useInstancing =
-				   (currentShader->api().flags & USE_INSTANCING)
-				&& ((params.mesh->lodMask & ANIMATED) == 0);
+					(currentShader->api().flags & USE_INSTANCING) && ((params.mesh->lodMask & ANIMATED) == 0);
 
-//				engine_log("Render %5d of (mtl=%p model=%p mesh=%p dsr=%d)%s",
-//					int(instances.size()),
-//					params.mtl,
-//					params.model,
-//					params.mesh,
-//					params.doublesided,
-//					(useInstancing) ? " instanced" : "");
+			//				engine_log("Render %5d of (mtl=%p model=%p mesh=%p dsr=%d)%s",
+			//					int(instances.size()),
+			//					params.mtl,
+			//					params.model,
+			//					params.mesh,
+			//					params.doublesided,
+			//					(useInstancing) ? " instanced" : "");
 
-			if(params.doublesided)
+			if (params.doublesided)
 				glDisable(GL_CULL_FACE);
 			else
 				glEnable(GL_CULL_FACE);
 
-			if(useInstancing == false)
+			if (useInstancing == false)
 			{
-				for(Instance const & inst : instances)
+				for (Instance const &inst : instances)
 				{
 					MATRIX animatedBones[ACKNEXT_MAX_BONES];
-					for(int i = 0; i < ACKNEXT_MAX_BONES; i++)
+					for (int i = 0; i < ACKNEXT_MAX_BONES; i++)
 					{
-						MATRIX & transform = animatedBones[i];
+						MATRIX &transform = animatedBones[i];
 						mat_id(&transform);
 						mat_translate(&transform, &inst.ent->pose[i].position);
 						mat_rotate(&transform, &inst.ent->pose[i].rotation);
@@ -734,16 +746,16 @@ static void render_scene(CAMERA * perspective, MATERIAL * mtlOverride)
 
 					MATRIX transforms[ACKNEXT_MAX_BONES];
 					transforms[0] = animatedBones[0];
-					for(int i = 1; i < inst.ent->model->boneCount; i++)
+					for (int i = 1; i < inst.ent->model->boneCount; i++)
 					{
-						BONE * bone = &inst.ent->model->bones[i];
+						BONE *bone = &inst.ent->model->bones[i];
 						mat_mul(&transforms[i], &animatedBones[i], &transforms[bone->parent]);
 					}
 
-					MATRIX * boneTrafos = (MATRIX*)buffer_map(bonesBuf, READWRITE);
-					for(int i = 0; i < inst.ent->model->boneCount; i++)
+					MATRIX *boneTrafos = (MATRIX *)buffer_map(bonesBuf, READWRITE);
+					for (int i = 0; i < inst.ent->model->boneCount; i++)
 					{
-						BONE * bone = &inst.ent->model->bones[i];
+						BONE *bone = &inst.ent->model->bones[i];
 						mat_mul(&boneTrafos[i], &bone->bindToBoneTransform, &transforms[i]);
 					}
 					buffer_unmap(bonesBuf);
@@ -758,16 +770,16 @@ static void render_scene(CAMERA * perspective, MATERIAL * mtlOverride)
 			{
 				MATRIX transforms[ACKNEXT_MAX_BONES];
 				transforms[0] = params.model->bones[0].transform;
-				for(int i = 1; i < params.model->boneCount; i++)
+				for (int i = 1; i < params.model->boneCount; i++)
 				{
-					BONE const * bone = &params.model->bones[i];
+					BONE const *bone = &params.model->bones[i];
 					mat_mul(&transforms[i], &bone->transform, &transforms[bone->parent]);
 				}
 
-				MATRIX * boneTrafos = (MATRIX*)buffer_map(bonesBuf, READWRITE);
-				for(int i = 0; i < params.model->boneCount; i++)
+				MATRIX *boneTrafos = (MATRIX *)buffer_map(bonesBuf, READWRITE);
+				for (int i = 0; i < params.model->boneCount; i++)
 				{
-					BONE const * bone = &params.model->bones[i];
+					BONE const *bone = &params.model->bones[i];
 					mat_mul(&boneTrafos[i], &bone->bindToBoneTransform, &transforms[i]);
 				}
 				buffer_unmap(bonesBuf);
@@ -778,41 +790,44 @@ static void render_scene(CAMERA * perspective, MATERIAL * mtlOverride)
 				// TODO: Implement instance buffer cycling
 				{
 					size_t size = instances.size() * sizeof(Instance);
-					if(size <= instaBuf->size) {
+					if (size <= instaBuf->size)
+					{
 						buffer_update(
-							instaBuf,
-							0,
-							size,
-							instances.data());
-					} else {
+								instaBuf,
+								0,
+								size,
+								instances.data());
+					}
+					else
+					{
 						buffer_set(
-							instaBuf,
-							size,
-							instances.data());
+								instaBuf,
+								size,
+								instances.data());
 					}
 				}
 
 				glVertexArrayVertexBuffer(
-					vao,
-					12,
-					instaBuf->object,
-					0,
-					sizeof(Instance));
+						vao,
+						12,
+						instaBuf->object,
+						0,
+						sizeof(Instance));
 				glVertexArrayBindingDivisor(
-					vao,
-					12,
-					1);
+						vao,
+						12,
+						1);
 
-				currentShader->matWorld = MATRIX { 0 };
+				currentShader->matWorld = MATRIX{0};
 
 				int count;
 				GLenum type = opengl_setMesh(params.mesh, &count);
 
 				opengl_draw(
-					type,
-					0,
-					count,
-					instances.size());
+						type,
+						0,
+						count,
+						instances.size());
 			}
 		}
 	}

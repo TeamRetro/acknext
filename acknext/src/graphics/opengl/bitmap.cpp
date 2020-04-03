@@ -1,7 +1,8 @@
 #include "bitmap.hpp"
 
 #include <assert.h>
-#include <SDL2/SDL_image.h>
+// #include <SDL2/SDL_image.h>
+#include <stb_image.h>
 
 #include "extensions/extension.hpp"
 #include <acknext/serialization.h>
@@ -16,7 +17,8 @@ Bitmap::Bitmap(GLenum type, GLenum format)
 
 Bitmap::~Bitmap()
 {
-	if(api().pixels) {
+	if (api().pixels)
+	{
 		free(api().pixels);
 	}
 	glDeleteTextures(1, &api().object);
@@ -27,100 +29,104 @@ ACKNEXT_API_BLOCK
 	// for loading bitmaps
 	int bmap_miplevels = 0; // 0=infinite
 
-	BITMAP * bmap_create(GLenum type, GLenum format)
+	BITMAP *bmap_create(GLenum type, GLenum format)
 	{
 		return demote(new Bitmap(type, format));
 	}
 
-	BITMAP * bmap_createblack(int width, int height, GLenum format)
+	BITMAP *bmap_createblack(int width, int height, GLenum format)
 	{
-		if(width < 0 || height < 0) {
+		if (width < 0 || height < 0)
+		{
 			engine_seterror(ERR_INVALIDARGUMENT, "width and height must be greater 0!");
 			return nullptr;
 		}
-		BITMAP * bmp = bmap_create(GL_TEXTURE_2D, format);
+		BITMAP *bmp = bmap_create(GL_TEXTURE_2D, format);
 		bmap_set(bmp, width, height, format, GL_UNSIGNED_BYTE, nullptr);
 		return bmp;
 	}
 
-	BITMAP * bmap_createpixel(COLOR color)
+	BITMAP *bmap_createpixel(COLOR color)
 	{
-		BITMAP * bmp = bmap_createblack(1, 1, GL_RGBA32F);
+		BITMAP *bmp = bmap_createblack(1, 1, GL_RGBA32F);
 		glTextureSubImage2D(
-			bmp->object,
-			0,
-			0, 0, 1, 1,
-			GL_RGBA, GL_FLOAT,
-			&color);
+				bmp->object,
+				0,
+				0, 0, 1, 1,
+				GL_RGBA, GL_FLOAT,
+				&color);
 		return bmp;
 	}
 
-	BITMAP * bmap_load(char const * fileName)
+	BITMAP *bmap_load(char const *fileName)
 	{
-		ACKFILE * file = file_open_read(fileName);
-		if(file == nullptr) {
+		ACKFILE *file = file_open_read(fileName);
+		if (file == nullptr)
+		{
 			return nullptr;
 		}
 
-		char const * ext = strrchr(fileName, '.');
-		if(ext != nullptr) {
+		char const *ext = strrchr(fileName, '.');
+		if (ext != nullptr)
+		{
 			ext++;
 		}
 
-		if(strcasecmp(ext, "atx")  == 0) {
-			BITMAP * bmp = bmap_read(file);
+		if (strcasecmp(ext, "atx") == 0)
+		{
+			BITMAP *bmp = bmap_read(file);
 			file_close(file);
 			return bmp;
 		}
 
-		SDL_RWops * rwops = SDL_RWFromAcknext(file);
-		if(rwops == nullptr)
-			return nullptr;
+		stbi_io_callbacks callbacks;
+		callbacks.read = [](void *user, char *data, int size) -> int {
+			return file_read(reinterpret_cast<ACKFILE *>(user), data, size);
+		};
+		callbacks.skip = [](void *user, int n) -> void {
+			auto const file = reinterpret_cast<ACKFILE *>(user);
+			size_t pos = file_tell(file);
+			file_seek(file, uint64_t(pos + n));
+		};
+		callbacks.eof = [](void *user) -> int {
+			return file_eof(reinterpret_cast<ACKFILE *>(user));
+		};
 
-		SDL_Surface * surface;
-		if(ext)
-			surface = IMG_LoadTyped_RW(rwops, 1, ext);
-		else
-			surface = IMG_Load_RW(rwops, 1);
-		if(surface == nullptr) {
-			engine_setsdlerror();
+		int img_w, img_h;
+		stbi_uc *const pixels = stbi_load_from_callbacks(&callbacks, file, &img_w, &img_h, nullptr, 4);
+		if (pixels == nullptr)
+		{
+			engine_seterror(ERR_FILESYSTEM, "Could not load %s", fileName);
 			return nullptr;
 		}
-		SDL_Surface * converted = SDL_ConvertSurfaceFormat(surface, SDL_PIXELFORMAT_ARGB8888, 0);
-		if(converted == nullptr) {
-			engine_setsdlerror();
-			SDL_FreeSurface(surface);
-			return nullptr;
-		}
-		surface = converted;
 
-		BITMAP * bmp = bmap_create(GL_TEXTURE_2D, GL_RGBA8);
+		size_t w(img_w);
+		size_t h(img_h);
 
-		SDL_LockSurface(surface);
+		BITMAP *bmp = bmap_create(GL_TEXTURE_2D, GL_RGBA8);
+		bmp->pixels = malloc(4 * w * h);
 
-		bmp->pixels = malloc(4 * surface->w * surface->h);
-
-		const size_t stride = 4 * surface->w;
-		for(int y = (surface->h - 1); y >= 0; y--)
+		const size_t stride = 4 * w;
+		for (int y = (h - 1); y >= 0; y--)
 		{
 			memcpy(
-				reinterpret_cast<uint8_t*>(bmp->pixels) + (stride * (surface->h - y - 1)),
-				reinterpret_cast<uint8_t*>(surface->pixels) + (stride * y),
-				stride);
+					reinterpret_cast<uint8_t *>(bmp->pixels) + (stride * (h - y - 1)),
+					reinterpret_cast<uint8_t *>(pixels) + (stride * y),
+					stride);
 		}
 
-		bmap_set(bmp, surface->w, surface->h, GL_BGRA, GL_UNSIGNED_BYTE, bmp->pixels);
-		SDL_UnlockSurface(surface);
+		bmap_set(bmp, w, h, GL_BGRA, GL_UNSIGNED_BYTE, bmp->pixels);
 
-		SDL_FreeSurface(surface);
+		stbi_image_free(pixels);
+
 		return bmp;
 	}
 
 	void bmap_renew(BITMAP * bitmap)
 	{
-		ARG_NOTNULL(bitmap,);
+		ARG_NOTNULL(bitmap, );
 
-		if(bitmap->pixels)
+		if (bitmap->pixels)
 			free(bitmap->pixels);
 
 		glDeleteTextures(1, &bitmap->object);
@@ -132,18 +138,21 @@ ACKNEXT_API_BLOCK
 		bitmap->depth = 0;
 	}
 
-	void bmap_set(BITMAP * bitmap, int width, int height, GLenum pixelFormat, GLenum channelFormat, void const * data)
+	void bmap_set(BITMAP * bitmap, int width, int height, GLenum pixelFormat, GLenum channelFormat, void const *data)
 	{
-		Bitmap * bmp = promote<Bitmap>(bitmap);
-		if(bmp == nullptr) {
+		Bitmap *bmp = promote<Bitmap>(bitmap);
+		if (bmp == nullptr)
+		{
 			engine_seterror(ERR_INVALIDARGUMENT, "bitmap must not be NULl!");
 			return;
 		}
-		if(bitmap->target != GL_TEXTURE_1D_ARRAY && bitmap->target != GL_TEXTURE_2D) {
+		if (bitmap->target != GL_TEXTURE_1D_ARRAY && bitmap->target != GL_TEXTURE_2D)
+		{
 			engine_seterror(ERR_INVALIDOPERATION, "bitmap must be either GL_TEXTURE_1D_ARRAY or GL_TEXTURE_2D!");
 			return;
 		}
-		if(width < 0 || height < 0) {
+		if (width < 0 || height < 0)
+		{
 			engine_seterror(ERR_INVALIDARGUMENT, "width and height must be greater 0!");
 			return;
 		}
@@ -151,7 +160,8 @@ ACKNEXT_API_BLOCK
 		int levels = 0;
 		{
 			int a = width, b = height;
-			while(a > 0 && b > 0) {
+			while (a > 0 && b > 0)
+			{
 				a >>= 1;
 				b >>= 1;
 				levels++;
@@ -159,21 +169,22 @@ ACKNEXT_API_BLOCK
 		}
 
 		glTextureStorage2D(
-			bitmap->object,
-			levels,
-			bitmap->format,
-			width,
-			height);
-
-		if(data != nullptr) {
-			glTextureSubImage2D(
 				bitmap->object,
-				0,
-				0, 0,
-				width, height,
-				pixelFormat,
-				channelFormat,
-				data);
+				levels,
+				bitmap->format,
+				width,
+				height);
+
+		if (data != nullptr)
+		{
+			glTextureSubImage2D(
+					bitmap->object,
+					0,
+					0, 0,
+					width, height,
+					pixelFormat,
+					channelFormat,
+					data);
 		}
 
 		glTextureParameteri(bitmap->object, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -187,7 +198,7 @@ ACKNEXT_API_BLOCK
 		bitmap->depth = 1;
 	}
 
-	BITMAP * bmap_to_mipmap(BITMAP * bitmap)
+	BITMAP *bmap_to_mipmap(BITMAP * bitmap)
 	{
 		ARG_NOTNULL(bitmap, nullptr);
 		glTextureParameteri(bitmap->object, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
@@ -196,7 +207,7 @@ ACKNEXT_API_BLOCK
 		return bitmap;
 	}
 
-	BITMAP * bmap_to_linear(BITMAP * bitmap)
+	BITMAP *bmap_to_linear(BITMAP * bitmap)
 	{
 		ARG_NOTNULL(bitmap, nullptr);
 		glTextureParameteri(bitmap->object, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -204,7 +215,7 @@ ACKNEXT_API_BLOCK
 		return bitmap;
 	}
 
-	BITMAP * bmap_to_nearest(BITMAP * bitmap)
+	BITMAP *bmap_to_nearest(BITMAP * bitmap)
 	{
 		ARG_NOTNULL(bitmap, nullptr);
 		glTextureParameteri(bitmap->object, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -214,8 +225,9 @@ ACKNEXT_API_BLOCK
 
 	void bmap_remove(BITMAP * bitmap)
 	{
-		Bitmap * bmp = promote<Bitmap>(bitmap);
-		if(bmp) {
+		Bitmap *bmp = promote<Bitmap>(bitmap);
+		if (bmp)
+		{
 			delete bmp;
 		}
 	}

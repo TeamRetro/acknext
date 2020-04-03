@@ -61,3 +61,4 @@ build/vs2010
 
 #ingnore folder created during compilation
 lib
+m4/*.m4

@@ -1,7 +1,7 @@
 #ifndef SHAREDDATA_HPP
 #define SHAREDDATA_HPP
 
-#include <engine.hpp>
+#include "engine.hpp"
 
 class Shader;
 

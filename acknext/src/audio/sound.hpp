@@ -1,7 +1,7 @@
 #ifndef SOUND_HPP
 #define SOUND_HPP
 
-#include <engine.hpp>
+#include "engine.hpp"
 #include <SDL2/SDL_mixer.h>
 
 class Sound : public EngineObject<SOUND>

@@ -46,7 +46,7 @@ ACKNEXT_API_BLOCK
 		view_to_bounds(reference, nullptr, &size);
 		glm_to_ack(matView,
 			glm::inverse(glm::mat4_cast(ack_to_glm(cam->rotation))) *
-			glm::translate(glm::mat4(), -ack_to_glm(cam->position)));
+			glm::translate(glm::identity<glm::mat4>(), -ack_to_glm(cam->position)));
 		glm_to_ack(matProjection, glm::perspectiveFov(
 		   var(DEG_TO_RAD * cam->arc),
 		   var(size.width * cam->aspect),

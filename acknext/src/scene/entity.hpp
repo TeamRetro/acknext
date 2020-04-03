@@ -1,7 +1,7 @@
 #ifndef ENTITY_HPP
 #define ENTITY_HPP
 
-#include <engine.hpp>
+#include "engine.hpp"
 
 class Entity : public EngineObject<ENTITY>
 {

@@ -45,3 +45,8 @@ documentation/xml/
 scripts/share/
 bin/*
 scripts/cef.log
+zig-cache/
+vgcore.*
+*.so
+*.so.*
+*.qmake.stash

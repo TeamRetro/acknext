@@ -1,7 +1,7 @@
 #ifndef ANIMATION_HPP
 #define ANIMATION_HPP
 
-#include <engine.hpp>
+#include "engine.hpp"
 
 class Channel : public EngineObject<CHANNEL>
 {

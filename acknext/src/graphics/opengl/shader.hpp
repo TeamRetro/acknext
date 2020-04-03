@@ -1,7 +1,7 @@
 #ifndef SHADER_HPP
 #define SHADER_HPP
 
-#include <engine.hpp>
+#include "engine.hpp"
 #include <vector>
 #include <map>
 #include <string>

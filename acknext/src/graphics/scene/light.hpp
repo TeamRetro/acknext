@@ -1,7 +1,7 @@
 #ifndef LIGHT_HPP
 #define LIGHT_HPP
 
-#include <engine.hpp>
+#include "engine.hpp"
 
 class Light : public EngineObject<LIGHT>
 {
