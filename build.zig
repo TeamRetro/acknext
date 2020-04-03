@@ -1,9 +1,20 @@
 const std = @import("std");
 
 const acknext = @import("acknext/build.zig");
+const physfs = @import("extern/physfs-3.0.2/build.zig");
 
 pub fn build(b: *std.build.Builder) void {
+    const mode = b.standardReleaseOptions();
+    const target = b.standardTargetOptions(.{});
+
     const acknext_lib = acknext.buildLib("./acknext", b);
+    acknext_lib.setTarget(target);
+    acknext_lib.setBuildMode(mode);
+    acknext_lib.install();
+
+    const physfs_lib = physfs.buildLib("./extern/physfs-3.0.2", b);
+    physfs_lib.setTarget(target);
+    physfs_lib.setBuildMode(mode);
 
     const rotating_cube = b.addExecutable("rotating-cube", null);
 
@@ -15,11 +26,12 @@ pub fn build(b: *std.build.Builder) void {
     rotating_cube.addLibPath("./extern/ode/ode/src/.libs");
     rotating_cube.linkSystemLibraryName("ode");
 
-    rotating_cube.addLibPath("./extern/physfs-3.0.2/build");
-    rotating_cube.linkSystemLibraryName("physfs");
-
     rotating_cube.linkLibC();
 
+    rotating_cube.linkLibrary(physfs_lib);
     rotating_cube.linkLibrary(acknext_lib);
+
+    rotating_cube.setTarget(target);
+    rotating_cube.setBuildMode(mode);
     rotating_cube.install();
 }

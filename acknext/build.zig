@@ -5,8 +5,6 @@ pub fn buildLib(comptime prefix_path: []const u8, b: *Builder) *std.build.LibExe
     if (comptime std.mem.eql(u8, prefix_path, ""))
         @compileError("Don't pass empty string to buildLib. If you want to pass cwd(), use \".\".");
 
-    const mode = b.standardReleaseOptions();
-    const target = b.standardTargetOptions(.{});
     const lib = b.addStaticLibrary("acknext", null);
 
     // Add engine sources
@@ -51,15 +49,16 @@ pub fn buildLib(comptime prefix_path: []const u8, b: *Builder) *std.build.LibExe
     lib.linkSystemLibrary("sdl2");
     lib.linkSystemLibrary("SDL2_mixer");
 
-    lib.setTarget(target);
-    lib.setBuildMode(mode);
-    lib.install();
-
     return lib;
 }
 
 pub fn build(b: *Builder) void {
-    _ = buildLib(".", b);
+    const lib = buildLib(".", b);
+    const mode = b.standardReleaseOptions();
+    const target = b.standardTargetOptions(.{});
+    lib.setTarget(target);
+    lib.setBuildMode(mode);
+    lib.install();
 }
 
 const cpp_sources = [_][]const u8{
