@@ -2,6 +2,7 @@ const std = @import("std");
 
 const acknext = @import("acknext/build.zig");
 const physfs = @import("extern/physfs-3.0.2/build.zig");
+const zlib = @import("extern/zlib-1.2.11/build.zig");
 
 pub fn build(b: *std.build.Builder) void {
     const mode = b.standardReleaseOptions();
@@ -15,6 +16,10 @@ pub fn build(b: *std.build.Builder) void {
     const physfs_lib = physfs.buildLib("./extern/physfs-3.0.2", b);
     physfs_lib.setTarget(target);
     physfs_lib.setBuildMode(mode);
+
+    const zlib_lib = zlib.buildLib("./extern/zlib-1.2.11", b);
+    zlib_lib.setTarget(target);
+    zlib_lib.setBuildMode(mode);
 
     const rotating_cube = b.addExecutable("rotating-cube", null);
 
@@ -30,6 +35,7 @@ pub fn build(b: *std.build.Builder) void {
 
     rotating_cube.linkLibrary(physfs_lib);
     rotating_cube.linkLibrary(acknext_lib);
+    rotating_cube.linkLibrary(zlib_lib);
 
     rotating_cube.setTarget(target);
     rotating_cube.setBuildMode(mode);

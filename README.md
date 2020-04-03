@@ -42,11 +42,6 @@ A game engine prototype loosely inspired by the Acknex A8 engine.
     2. Run `./bootstrap`
     3. Run `./configure --disable-demos  --enable-static  --enable-libccd  --with-drawstuff=none  --with-libccd=internal`
     4. Run `make`
-6. Build zlib
-    1. Go to `extern/zlib`
-    2. Create a directory `build`
-    3. Change to that directory and call `cmake ..`
-    4. Run `make`
 7. Build the engine
     1. Go to root directory
     2. `zig build`
