@@ -195,7 +195,7 @@ ACKNEXT_API_BLOCK
 		CollisionSystem::initialize();
 
 		engine_log("Initialize audio system...");
-		AudioManager::initialize();
+		// AudioManager::initialize();
 
 		engine_log("Engine ready.");
 		engine_log("==========================================================================================");

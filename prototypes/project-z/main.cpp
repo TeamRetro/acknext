@@ -441,7 +441,7 @@ void gamemain()
 	plambilight->intensity = 2;
 	vec_fill((VECTOR*)&plambilight->color, 0.3);
 
-	tree();
+	// tree();
 
 	player = ent_create("/other/cyber-pirate/cyber-pirate.amd", vector(0, 0, 0), NULL);
 	player->categories = PLAYER_MASK;
@@ -455,7 +455,7 @@ void gamemain()
 		file_close(file);
 	}
 
-	spawn(2048, 50000, "/models/tree.amd", 1.0, &nullvector);
+	// spawn(2048, 50000, "/models/tree.amd", 1.0, &nullvector);
 
 	event_attach(on_update, (EVENTHANDLER)update);
 }

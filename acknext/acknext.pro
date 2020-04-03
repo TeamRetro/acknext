@@ -20,11 +20,14 @@ LIBS += -lphysfs
 
 DEFINES += _ACKNEXT_INTERNAL_
 
-custom_rcc.output  = resource.o
-custom_rcc.commands = make -C $$PWD/../resource/ qmake OUTFILE=`pwd`/${QMAKE_FILE_OUT} shaders
-custom_rcc.depend_command = make -C $$PWD/../resource/ depends
-custom_rcc.input = RESOURCES
-QMAKE_EXTRA_COMPILERS += custom_rcc
+#
+#custom_rcc.output  = resource.o
+#custom_rcc.commands = /usr/bin/make /../resource/ qmake OUTFILE=`pwd`/${QMAKE_FILE_OUT} shaders
+#custom_rcc.depend_command = /usr/bin/make -C $$PWD/../resource/ depends
+#custom_rcc.input = RESOURCES
+#QMAKE_EXTRA_COMPILERS += custom_rcc
+
+LIBS += /home/felix/projects/acknext/resource/resource.o
 
 HEADERS += \
     src/graphics/opengl/buffer.hpp \

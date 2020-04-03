@@ -164,6 +164,6 @@ void QAcknextWidget::mouseMoveEvent(QMouseEvent *event)
 
 void QAcknextWidget::wheelEvent(QWheelEvent *event)
 {
-	vec_normalize(&camera->position, maxv(1, vec_length(&camera->position) + event->delta() / 120));
+	vec_normalize(&camera->position, maxv(1, vec_length(&camera->position) + event->pixelDelta().ry() / 120));
 	this->update();
 }

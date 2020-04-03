@@ -1,3 +1,5 @@
+#define GLM_ENABLE_EXPERIMENTAL
+
 #include "entity.hpp"
 #include "../events/event.hpp"
 

@@ -30,7 +30,7 @@ ACKNEXT_API_BLOCK
 {
 	void beep()
 	{
-		snd_play(beepSound, 100);
-		SDL_Delay(200); // Beep pauses the game a bit
+		// snd_play(beepSound, 100);
+		// SDL_Delay(200); // Beep pauses the game a bit
 	}
 }
