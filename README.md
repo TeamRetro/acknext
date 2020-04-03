@@ -38,25 +38,25 @@ A game engine prototype loosely inspired by the Acknex A8 engine.
 2. Get current master for [Zig](https://ziglang.org/download/) and make it available in your `PATH`
 3. Prepare the environment: `source setup-env`
 4. Build ODE
-  1. Go to `extern/ode/`
-  2. Run `./bootstrap`
-  3. Run `./configure --disable-demos  --enable-static  --enable-libccd  --with-drawstuff=none  --with-libccd=internal`
-  4. Run `make`
+    1. Go to `extern/ode/`
+    2. Run `./bootstrap`
+    3. Run `./configure --disable-demos  --enable-static  --enable-libccd  --with-drawstuff=none  --with-libccd=internal`
+    4. Run `make`
 5. Build physfs
-  1. Go to `extern/physfs-3.0.2`
-  2. Create a directory `build`
-  3. Change to that directory and call `cmake ..`
-  4. Run `make`
+    1. Go to `extern/physfs-3.0.2`
+    2. Create a directory `build`
+    3. Change to that directory and call `cmake ..`
+    4. Run `make`
 6. Build zlib
-  1. Go to `extern/zlib`
-  2. Create a directory `build`
-  3. Change to that directory and call `cmake ..`
-  4. Run `make`
+    1. Go to `extern/zlib`
+    2. Create a directory `build`
+    3. Change to that directory and call `cmake ..`
+    4. Run `make`
 7. Build the engine
-  1. Go to root directory
-  2. `zig build`
+    1. Go to root directory
+    2. `zig build`
 8. Test it
-  1. Run `./zig-cache/bin/rotating-cube`
+    1. Run `./zig-cache/bin/rotating-cube`
 
 ## Licence
 
