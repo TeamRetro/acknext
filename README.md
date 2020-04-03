@@ -45,6 +45,8 @@ the tools requires a complex setup yet to be simplified.
 - gnu binutils
 - 7-zip command line util (`7z`)
 - qt5-base for `rcc`
+- `SDL2`
+- `SDL2_mixer`
 
 ### Build Steps
 
